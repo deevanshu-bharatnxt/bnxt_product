@@ -103,8 +103,13 @@ const failureReasonMap: BillerResponse = {
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json();
-    const { firestoreBankName, lastFourDigitOfCard, mobileNumber, userId, loginMobile } =
-      body;
+    const {
+      firestoreBankName,
+      lastFourDigitOfCard,
+      mobileNumber,
+      userId,
+      loginMobile,
+    } = body;
 
     // const bbps_bank_name = bankNameMap[firestore_bank_name];
     const bbps_bank_name = bankNameMap[firestoreBankName as keyof BankNameMap];
@@ -179,97 +184,57 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       // Payment Range Calculation
       if (billData.bill) {
-        if (billData.exactness == "Exact and below") {
-          const paymentRange: any = {};
+        const paymentRange: any = {};
 
-          const upiMinLimitItem = billData.paymentLimits?.find(
-            (item: any) => item.paymentMode === "UPI"
-          );
-          const internetBankingMinLimitItem = billData.paymentLimits?.find(
-            (item: any) => item.paymentMode === "Internet Banking"
-          );
-          const TotalOutstanding = billData.additionalInfo?.find(
-            (item: any) => item.name === "Total Due Amount"
-          );
-          const TotalOustandingValue = TotalOutstanding
-            ? parseFloat(TotalOutstanding.value)
-            : 0;
+        const upiMinLimit =
+          parseFloat(
+            billData.paymentLimits?.find((item: { paymentMode: string; }) => item.paymentMode === "UPI")
+              ?.minLimit
+          ) || 10;
+        const internetBankingMinLimit =
+          parseFloat(
+            billData.paymentLimits?.find(
+              (item: { paymentMode: string; }) => item.paymentMode === "Internet Banking"
+            )?.minLimit
+          ) || 200000;
 
-          const upiMinLimit = upiMinLimitItem
-            ? parseFloat(upiMinLimitItem.minLimit)
-            : 10;
-          const internetBankingMinLimit = internetBankingMinLimitItem
-            ? parseFloat(internetBankingMinLimitItem.minLimit)
-            : 200000;
+        const maxAdditionalInfoValue =
+          billData.additionalInfo?.reduce((max: number, item: { value: string; }) => {
+            const numValue = parseFloat(item.value);
+            return isNaN(numValue) ? max : Math.max(max, numValue);
+          }, 0) || 0;
 
-          paymentRange.UPI = {
-            minLimit: Math.max(10, upiMinLimit),
-            maxLimit: Math.min(
-              200000,
-              Math.max(billData.bill.amount, TotalOustandingValue)
-            ),
-          };
+        const payableAmount = Math.max(
+          billData.bill.amount,
+          maxAdditionalInfoValue
+        );
 
-          if (200000 > Math.max(billData.bill.amount, TotalOustandingValue)) {
-            paymentRange["Internet Banking"] = null;
-          } else {
-            paymentRange["Internet Banking"] = {
-              minLimit: Math.max(200000, internetBankingMinLimit),
-              maxLimit: Math.min(1000000, billData.bill.amount),
-            };
-          }
+        paymentRange.UPI = {
+          minLimit: Math.max(10, upiMinLimit),
+          maxLimit: Math.min(200000, payableAmount),
+        };
 
-          paymentRange["minPayableAmount"] = Math.max(10, upiMinLimit);
-          if ((billData.exactness = "Exact and below")) {
-            paymentRange["maxPayableAmount"] = Math.max(
-              billData.bill.amount,
-              TotalOustandingValue
-            );
-          } else {
-            paymentRange["maxPayableAmount"] = 1000000;
-          }
+        paymentRange["Internet Banking"] =
+          payableAmount > 200000
+            ? {
+                minLimit: Math.max(200000, internetBankingMinLimit),
+                maxLimit: Math.min(1000000, billData.bill.amount),
+              }
+            : null;
 
-          data.data.data.bnxtResponse.paymentRange = paymentRange;
-        } else {
-          const paymentRange: any = {};
+        paymentRange["minPayableAmount"] = Math.max(10, upiMinLimit);
+        paymentRange["maxPayableAmount"] =
+          billData.exactness === "Exact and below" ? payableAmount : 1000000;
 
-          const upiMinLimitItem = billData.paymentLimits?.find(
-            (item: any) => item.paymentMode === "UPI"
-          );
-          const internetBankingMinLimitItem = billData.paymentLimits?.find(
-            (item: any) => item.paymentMode === "Internet Banking"
-          );
-
-          const upiMinLimit = upiMinLimitItem
-            ? parseFloat(upiMinLimitItem.minLimit)
-            : 10;
-          const internetBankingMinLimit = internetBankingMinLimitItem
-            ? parseFloat(internetBankingMinLimitItem.minLimit)
-            : 200000;
-
-          paymentRange.UPI = {
-            minLimit: Math.max(10, upiMinLimit),
-            maxLimit: 200000,
-          };
-
-          paymentRange["Internet Banking"] = {
-            minLimit: Math.max(200000, internetBankingMinLimit),
-            maxLimit: 1000000,
-          };
-
-          paymentRange["minPayableAmount"] = paymentRange.UPI.minLimit;
-          paymentRange["maxPayableAmount"] = 1000000;
-
-          data.data.data.bnxtResponse.paymentRange = paymentRange;
-        }
+        data.data.data.bnxtResponse.paymentRange = paymentRange;
       }
-
       // Ref ID
       data.data.data.bnxtResponse.traceId = data.data.traceId;
       // Trace ID
       data.data.data.bnxtResponse.refId = data.data.data.refId;
 
       // Bill Details
+
       if (billData.bill) {
         const bnxtBillDetails: any = {};
 
@@ -277,22 +242,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           bnxtBillDetails["Bill Amount"] = billData.bill.amount;
         }
 
-        const MinimumAmountDue = billData.additionalInfo?.find(
-          (item: { name: string; }) => item.name === "Minimum Payable Amount"
-        );
-        if (MinimumAmountDue > 0) {
-          bnxtBillDetails["Minimum Due"] = MinimumAmountDue.value;
-        }
-
-        const TotalOutstanding = billData.additionalInfo?.find(
-          (item: any) => item.name === "Total Due Amount"
-        );
-        if (TotalOutstanding > 0) {
-          bnxtBillDetails["Total Due Amount"] = TotalOutstanding.value;
+        if (billData.additionalInfo && Array.isArray(billData.additionalInfo)) {
+          billData.additionalInfo.forEach((item: any) => {
+            if (
+              item.value > 0 ||
+              (typeof item.value === "string" &&
+                item.value !== "0" &&
+                item.value !== "")
+            ) {
+              // Check for numeric > 0 OR non-zero, non-empty strings
+              bnxtBillDetails[item.name] = item.value;
+            }
+          });
         }
 
         data.data.data.bnxtResponse.bnxtBillDetails = bnxtBillDetails;
       }
+
       data.data.data.bnxtResponse.supportsCustomPayment = true;
       data.data.data.bnxtResponse.loginMobile = loginMobile;
       data.data = bnxtResponse;
