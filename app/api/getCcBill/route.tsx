@@ -184,50 +184,91 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       // Payment Range Calculation
       if (billData.bill) {
-        const paymentRange: any = {};
+        if (billData.exactness == "Exact and below") {
+          const paymentRange: any = {};
 
-        const upiMinLimit =
-          parseFloat(
-            billData.paymentLimits?.find((item: { paymentMode: string; }) => item.paymentMode === "UPI")
-              ?.minLimit
-          ) || 10;
-        const internetBankingMinLimit =
-          parseFloat(
-            billData.paymentLimits?.find(
-              (item: { paymentMode: string; }) => item.paymentMode === "Internet Banking"
-            )?.minLimit
-          ) || 200000;
+          const upiMinLimitItem = billData.paymentLimits?.find(
+            (item: any) => item.paymentMode === "UPI"
+          );
+          const internetBankingMinLimitItem = billData.paymentLimits?.find(
+            (item: any) => item.paymentMode === "Internet Banking"
+          );
+          const TotalOutstanding = billData.additionalInfo?.find(
+            (item: any) => item.name === "Total Due Amount"
+          );
+          const TotalOustandingValue = TotalOutstanding
+            ? parseFloat(TotalOutstanding.value)
+            : 0;
 
-        const maxAdditionalInfoValue =
-          billData.additionalInfo?.reduce((max: number, item: { value: string; }) => {
-            const numValue = parseFloat(item.value);
-            return isNaN(numValue) ? max : Math.max(max, numValue);
-          }, 0) || 0;
+          const upiMinLimit = upiMinLimitItem
+            ? parseFloat(upiMinLimitItem.minLimit)
+            : 10;
+          const internetBankingMinLimit = internetBankingMinLimitItem
+            ? parseFloat(internetBankingMinLimitItem.minLimit)
+            : 200000;
 
-        const payableAmount = Math.max(
-          billData.bill.amount,
-          maxAdditionalInfoValue
-        );
+          paymentRange.UPI = {
+            minLimit: Math.max(10, upiMinLimit),
+            maxLimit: Math.min(
+              200000,
+              Math.max(billData.bill.amount, TotalOustandingValue)
+            ),
+          };
 
-        paymentRange.UPI = {
-          minLimit: Math.max(10, upiMinLimit),
-          maxLimit: Math.min(200000, payableAmount),
-        };
+          if (200000 > Math.max(billData.bill.amount, TotalOustandingValue)) {
+            paymentRange["Internet Banking"] = null;
+          } else {
+            paymentRange["Internet Banking"] = {
+              minLimit: Math.max(200000, internetBankingMinLimit),
+              maxLimit: Math.min(1000000, billData.bill.amount),
+            };
+          }
 
-        paymentRange["Internet Banking"] =
-          payableAmount > 200000
-            ? {
-                minLimit: Math.max(200000, internetBankingMinLimit),
-                maxLimit: Math.min(1000000, billData.bill.amount),
-              }
-            : null;
+          paymentRange["minPayableAmount"] = Math.max(10, upiMinLimit);
+          if ((billData.exactness = "Exact and below")) {
+            paymentRange["maxPayableAmount"] = Math.max(
+              billData.bill.amount,
+              TotalOustandingValue
+            );
+          } else {
+            paymentRange["maxPayableAmount"] = 1000000;
+          }
 
-        paymentRange["minPayableAmount"] = Math.max(10, upiMinLimit);
-        paymentRange["maxPayableAmount"] =
-          billData.exactness === "Exact and below" ? payableAmount : 1000000;
+          data.data.data.bnxtResponse.paymentRange = paymentRange;
+        } else {
+          const paymentRange: any = {};
 
-        data.data.data.bnxtResponse.paymentRange = paymentRange;
+          const upiMinLimitItem = billData.paymentLimits?.find(
+            (item: any) => item.paymentMode === "UPI"
+          );
+          const internetBankingMinLimitItem = billData.paymentLimits?.find(
+            (item: any) => item.paymentMode === "Internet Banking"
+          );
+
+          const upiMinLimit = upiMinLimitItem
+            ? parseFloat(upiMinLimitItem.minLimit)
+            : 10;
+          const internetBankingMinLimit = internetBankingMinLimitItem
+            ? parseFloat(internetBankingMinLimitItem.minLimit)
+            : 200000;
+
+          paymentRange.UPI = {
+            minLimit: Math.max(10, upiMinLimit),
+            maxLimit: 200000,
+          };
+
+          paymentRange["Internet Banking"] = {
+            minLimit: Math.max(200000, internetBankingMinLimit),
+            maxLimit: 1000000,
+          };
+
+          paymentRange["minPayableAmount"] = paymentRange.UPI.minLimit;
+          paymentRange["maxPayableAmount"] = 1000000;
+
+          data.data.data.bnxtResponse.paymentRange = paymentRange;
+        }
       }
+
       // Ref ID
       data.data.data.bnxtResponse.traceId = data.data.traceId;
       // Trace ID
