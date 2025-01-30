@@ -33,10 +33,14 @@ export default function GetBill() {
   const [response, setResponse] = useState<any | null>(null); // Type 'response' as needed
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loginMobile, setLoginMobile] = useState(false);
 
   const handleBankNameChange = (e: ChangeEvent<HTMLSelectElement>) => {
     // Correct event type
     setSelectedBankName(e.target.value);
+  };
+  const handleLoginMobileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setLoginMobile(e.target.checked);
   };
 
   const handleSubmit = async (e: ChangeEvent<HTMLFormElement>) => {
@@ -53,10 +57,11 @@ export default function GetBill() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          firestore_bank_name: selectedBankName,
+          firestoreBankName: selectedBankName,
           lastFourDigitOfCard: lastFourDigits,
           mobileNumber,
           userId,
+          loginMobile,
         }),
       });
 
@@ -140,6 +145,15 @@ export default function GetBill() {
           required
         />
         <br />
+        <label htmlFor="loginMobile">Login with Mobile:</label>
+        <input
+          type="checkbox"
+          id="loginMobile"
+          checked={loginMobile}
+          onChange={handleLoginMobileChange}
+        />
+        <br />
+      
 
         <button type="submit" disabled={loading}>
           {loading ? "Loading..." : "Get Bill"}

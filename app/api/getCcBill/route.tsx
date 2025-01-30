@@ -103,12 +103,11 @@ const failureReasonMap: BillerResponse = {
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json();
-    const { firestore_bank_name, lastFourDigitOfCard, mobileNumber, userId } =
+    const { firestoreBankName, lastFourDigitOfCard, mobileNumber, userId, loginMobile } =
       body;
 
     // const bbps_bank_name = bankNameMap[firestore_bank_name];
-    const bbps_bank_name =
-      bankNameMap[firestore_bank_name as keyof BankNameMap];
+    const bbps_bank_name = bankNameMap[firestoreBankName as keyof BankNameMap];
 
     if (!bbps_bank_name) {
       return NextResponse.json(
@@ -126,7 +125,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         userId,
       }
     );
-
     const data = bbpsResponse.data;
 
     if (data.data && data.data.data) {
@@ -296,6 +294,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         data.data.data.bnxtResponse.bnxtBillDetails = bnxtBillDetails;
       }
       data.data.data.bnxtResponse.supportsCustomPayment = true;
+      data.data.data.bnxtResponse.loginMobile = loginMobile;
       data.data = bnxtResponse;
     }
 
