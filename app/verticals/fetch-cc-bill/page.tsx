@@ -1,9 +1,7 @@
 "use client";
-// pages/get-bill.js (or .tsx)
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 
 const bankNames = [
-  // Directly use the BBPS bank names
   "AU SMALL FINANCE BANK",
   "AXIS BANK",
   "BANK OF BARODA",
@@ -28,19 +26,21 @@ const bankNames = [
 ];
 
 export default function GetBill() {
-  const [selectedBankName, setSelectedBankName] = useState(""); // Directly store the selected bank name
+  const [selectedBankName, setSelectedBankName] = useState("");
   const [lastFourDigits, setLastFourDigits] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [userId, setUserId] = useState("");
-  const [response, setResponse] = useState(null);
-  const [error, setError] = useState(null);
+  const [response, setResponse] = useState<any | null>(null); // Type 'response' as needed
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleBankNameChange = (e) => {
-    setSelectedBankName(e.target.value); // Update selected bank name
+  const handleBankNameChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    // Correct event type
+    setSelectedBankName(e.target.value);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: ChangeEvent<HTMLFormElement>) => {
+    // Correct event type
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -48,13 +48,12 @@ export default function GetBill() {
 
     try {
       const res = await fetch("/api/getCcBill", {
-        // Your API route
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          firestore_bank_name: selectedBankName, // Send the selected bank name directly
+          firestore_bank_name: selectedBankName,
           lastFourDigitOfCard: lastFourDigits,
           mobileNumber,
           userId,
@@ -68,9 +67,19 @@ export default function GetBill() {
 
       const data = await res.json();
       setResponse(data);
-    } catch (err) {
-      setError(err.message);
-      console.error("API Error:", err);
+    } catch (err: any) {
+      // Type 'err' as 'any' or a custom error type if needed
+      if (err instanceof Error) {
+        setError(err.message);
+        console.error("API Error:", err);
+      } else if (typeof err === "string") {
+        // Check if err is a string
+        setError(err);
+        console.error("API Error (string):", err);
+      } else {
+        setError("An unknown error occurred.");
+        console.error("An unknown error occurred:", err);
+      }
     } finally {
       setLoading(false);
     }
@@ -101,7 +110,9 @@ export default function GetBill() {
           type="text"
           id="lastFourDigits"
           value={lastFourDigits}
-          onChange={(e) => setLastFourDigits(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setLastFourDigits(e.target.value)
+          }
           required
         />
         <br />
@@ -111,7 +122,9 @@ export default function GetBill() {
           type="tel"
           id="mobileNumber"
           value={mobileNumber}
-          onChange={(e) => setMobileNumber(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setMobileNumber(e.target.value)
+          }
           required
         />
         <br />
@@ -121,7 +134,9 @@ export default function GetBill() {
           type="text"
           id="userId"
           value={userId}
-          onChange={(e) => setUserId(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setUserId(e.target.value)
+          }
           required
         />
         <br />
