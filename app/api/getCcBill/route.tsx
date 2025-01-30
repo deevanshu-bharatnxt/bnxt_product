@@ -1,0 +1,457 @@
+// import { NextRequest, NextResponse } from "next/server";
+// import axios from "axios";
+
+// import { initializeApp } from "firebase/app";
+// import { getFirestore } from "firebase/firestore";
+
+// const bankNameMap = {
+//   "AU SMALL FINANCE BANK": "AU Bank Credit Card",
+//   "AXIS BANK": "Axis Bank Credit Card",
+//   "BANK OF BARODA": "BoB Credit Card",
+//   "CANARA BANK": "Canara Credit Card",
+//   "DBS BANK": "DBS Bank Credit Card",
+//   "THE FEDERAL BANK": "Federal Bank Credit Card",
+//   "HDFC BANK": "HDFC Credit Card",
+//   "HSBC BANK": "HSBC Credit Card",
+//   "ICICI BANK": "ICICI Credit card",
+//   "IDBI BANK": "IDBI Bank Credit Card",
+//   "IDFC FIRST BANK": "IDFC FIRST Bank Credit Card",
+//   "INDIAN BANK": "Indian bank credit card",
+//   "INDUSIND BANK": "IndusInd Credit Card",
+//   "KOTAK MAHINDRA BANK": "Kotak Mahindra Bank Credit Card",
+//   "PUNJAB NATIONAL BANK": "Punjab National Bank Credit Card",
+//   "RBL BANK": "RBL Bank Credit Card",
+//   "SARASWAT BANK": "Saraswat Co-Operative Bank Ltd",
+//   "STATE BANK OF INDIA": "SBI Card",
+//   "SOUTH INDIAN BANK": "One Card - South Indian",
+//   "UNION BANK OF INDIA": "Union Bank of India Credit Card",
+//   "YES BANK": "Yes Bank Credit Card",
+// };
+
+// const failureReasonMap = {
+//   BFR001: {
+//     status: "Failure",
+//     message: "Incorrect / invalid details, reach out to support",
+//   },
+//   BFR002: {
+//     status: "Mobile Incorrect",
+//     message: "Share registered mobile against this card",
+//   },
+//   BFR003: { status: "Failure", message: "No bill data found!" },
+//   BFR004: {
+//     status: "Bill Paid",
+//     message:
+//       "As per bank's policy, payments can only be made when there's a bill due. We'll notify you as soon as your next bill is generated",
+//   },
+//   BFR005: { status: "Failure", message: "Card is blocked/closed" },
+//   BFR006: { status: "Failure", message: "Your card is not active yet" },
+//   BFR007: {
+//     status: "Failure",
+//     message: "Due date has passed, we are unable to fetch bill details!",
+//   },
+//   BFR008: {
+//     status: "Failure",
+//     message: "We are unable to fetch bill, please retry after sometime",
+//   },
+//   BFR009: {
+//     status: "Failure",
+//     message: "There is a bank downtime, please retry after sometime",
+//   },
+//   BFR010: {
+//     status: "Failure",
+//     message: "There is a bank downtime, please retry after sometime",
+//   },
+// };
+
+// const firebaseConfig = {
+//   apiKey: "AIzaSyBGU66tz9RqRkPUCzuQo_WPqkdlRJ5BXPc",
+//   authDomain: "bnxtstaging.firebaseapp.com",
+//   databaseURL:
+//     "https://bnxtstaging-default-rtdb.asia-southeast1.firebasedatabase.app",
+//   projectId: "bnxtstaging",
+//   storageBucket: "bnxtstaging.appspot.com",
+//   messagingSenderId: "930298277788",
+//   appId: "1:930298277788:web:85ebf0aa19cbaf1c6a2259",
+//   measurementId: "G-3ENFNZCLPP",
+// };
+
+// const app = initializeApp(firebaseConfig);
+// const firestore = getFirestore(app);
+
+// export async function POST(req: NextRequest): Promise<NextResponse> {
+//   try {
+//     const body = await req.json();
+//     const { firestore_bank_name, lastFourDigitOfCard, mobileNumber, userId } =
+//       body;
+
+//     const bbps_bank_name = bankNameMap[firestore_bank_name];
+
+//     if (!bbps_bank_name) {
+//       return NextResponse.json(
+//         { error: "Bank name not found in mapping" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const bbpsResponse = await axios.post(
+//       "https://staging.bharatnxt.in/bnxt_util/setu/v1/getCCBillOfUser",
+//       {
+//         bankName: bbps_bank_name,
+//         lastFourDigitOfCard,
+//         mobileNumber,
+//         userId,
+//       }
+//     );
+
+//     const data = bbpsResponse.data;
+
+//     if (data.data && data.data.data) {
+//       const billData = data.data.data;
+
+//       if (billData.additionalInfo) {
+//         // Check if additionalInfo exists
+//         billData.additionalInfo = billData.additionalInfo.map((item: any) => ({
+//           ...item,
+//           value: parseFloat(item.value),
+//         }));
+//       }
+
+//       if (billData.paymentLimits) {
+//         // Check if paymentLimits exists
+//         billData.paymentLimits = billData.paymentLimits.map((item: any) => ({
+//           ...item,
+//           maxLimit: item.maxLimit / 100,
+//           minLimit: item.minLimit / 100,
+//         }));
+//       }
+
+//       if (billData.bill) {
+//         // Check if bill exists
+//         billData.bill.amount = billData.bill.amount / 100;
+//       }
+
+//     //   if (billData.status === "Success") {
+//     //     const cardDocRef = firestore.collection(
+//     //       `card_details/${userId}/cards/${firestore_bank_name} - ${lastFourDigitOfCard}`
+//     //     );
+//     //     await cardDocRef.set(
+//     //       {
+//     //         BAT: billData.bill/100,
+//     //         // additionalInfo: billData.additionalInfo,
+//     //       },
+//     //       { merge: true }
+//     //     );
+//     //   }
+
+//       const bnxtResponse: any = {};
+//       if (billData.failureReason) {
+//         const failureDetails = failureReasonMap[billData.failureReason.code];
+//         bnxtResponse.status = failureDetails?.status || "Failure";
+//         bnxtResponse.message = failureDetails?.message || null;
+//         bnxtResponse.failureReason = billData.failureReason;
+//       } else {
+//         bnxtResponse.status =
+//           billData.status === "Success" ? "Success" : "Failure";
+//         bnxtResponse.message = null;
+//       }
+
+//       data.data.bnxtResponse = bnxtResponse;
+//     }
+
+//     return NextResponse.json(data, { status: 200 });
+//   } catch (error) {
+//     console.error("Error fetching bill details:", error);
+//     return NextResponse.json(
+//       { error: "Failed to fetch bill details" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+import { NextRequest, NextResponse } from "next/server";
+import axios from "axios";
+
+// import { initializeApp } from "firebase/app";
+// import { getFirestore } from "firebase/firestore";
+
+const bankNameMap = {
+  "AU SMALL FINANCE BANK": "AU Bank Credit Card",
+  "AXIS BANK": "Axis Bank Credit Card",
+  "BANK OF BARODA": "BoB Credit Card",
+  "CANARA BANK": "Canara Credit Card",
+  "DBS BANK": "DBS Bank Credit Card",
+  "THE FEDERAL BANK": "Federal Bank Credit Card",
+  "HDFC BANK": "HDFC Credit Card",
+  "HSBC BANK": "HSBC Credit Card",
+  "ICICI BANK": "ICICI Credit card",
+  "IDBI BANK": "IDBI Bank Credit Card",
+  "IDFC FIRST BANK": "IDFC FIRST Bank Credit Card",
+  "INDIAN BANK": "Indian bank credit card",
+  "INDUSIND BANK": "IndusInd Credit Card",
+  "KOTAK MAHINDRA BANK": "Kotak Mahindra Bank Credit Card",
+  "PUNJAB NATIONAL BANK": "Punjab National Bank Credit Card",
+  "RBL BANK": "RBL Bank Credit Card",
+  "SARASWAT BANK": "Saraswat Co-Operative Bank Ltd",
+  "STATE BANK OF INDIA": "SBI Card",
+  "SOUTH INDIAN BANK": "One Card - South Indian",
+  "UNION BANK OF INDIA": "Union Bank of India Credit Card",
+  "YES BANK": "Yes Bank Credit Card",
+};
+
+const failureReasonMap = {
+  BFR001: {
+    status: "Failure",
+    message: "Incorrect / invalid details, reach out to support",
+  },
+  BFR002: {
+    status: "Mobile Incorrect",
+    message: "Share registered mobile against this card",
+  },
+  BFR003: { status: "Failure", message: "No bill data found!" },
+  BFR004: {
+    status: "Bill Paid",
+    message:
+      "As per bank's policy, payments can only be made when there's a bill due. We'll notify you as soon as your next bill is generated",
+  },
+  BFR005: { status: "Failure", message: "Card is blocked/closed" },
+  BFR006: { status: "Failure", message: "Your card is not active yet" },
+  BFR007: {
+    status: "Failure",
+    message: "Due date has passed, we are unable to fetch bill details!",
+  },
+  BFR008: {
+    status: "Failure",
+    message: "We are unable to fetch bill, please retry after sometime",
+  },
+  BFR009: {
+    status: "Failure",
+    message: "There is a bank downtime, please retry after sometime",
+  },
+  BFR010: {
+    status: "Failure",
+    message: "There is a bank downtime, please retry after sometime",
+  },
+};
+
+// Replace with your actual Firebase config
+// const firebaseConfig = {
+//   apiKey: "AIzaSyBGU66tz9RqRkPUCzuQo_WPqkdlRJ5BXPc",
+//   authDomain: "bnxtstaging.firebaseapp.com",
+//   databaseURL:
+//     "https://bnxtstaging-default-rtdb.asia-southeast1.firebasedatabase.app",
+//   projectId: "bnxtstaging",
+//   storageBucket: "bnxtstaging.appspot.com",
+//   messagingSenderId: "930298277788",
+//   appId: "1:930298277788:web:85ebf0aa19cbaf1c6a2259",
+//   measurementId: "G-3ENFNZCLPP",
+// };
+
+// const app = initializeApp(firebaseConfig);
+// const firestore = getFirestore(app);
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  try {
+    const body = await req.json();
+    const { firestore_bank_name, lastFourDigitOfCard, mobileNumber, userId } =
+      body;
+
+    const bbps_bank_name = bankNameMap[firestore_bank_name];
+
+    if (!bbps_bank_name) {
+      return NextResponse.json(
+        { error: "Bank name not found in mapping" },
+        { status: 400 }
+      );
+    }
+
+    const bbpsResponse = await axios.post(
+      "https://staging.bharatnxt.in/bnxt_util/setu/v1/getCCBillOfUser",
+      {
+        bankName: bbps_bank_name,
+        lastFourDigitOfCard,
+        mobileNumber,
+        userId,
+      }
+    );
+
+    const data = bbpsResponse.data;
+
+    if (data.data && data.data.data) {
+      const billData = data.data.data;
+
+      if (billData.additionalInfo) {
+        billData.additionalInfo = billData.additionalInfo.map((item: any) => ({
+          ...item,
+          value: parseFloat(item.value),
+        }));
+      }
+
+      if (billData.paymentLimits) {
+        billData.paymentLimits = billData.paymentLimits.map((item: any) => ({
+          ...item,
+          maxLimit: item.maxLimit / 100,
+          minLimit: item.minLimit / 100,
+        }));
+      }
+
+      if (billData.bill) {
+        billData.bill.amount = billData.bill.amount / 100;
+      }
+
+      // Firestore Update (commented out in this version)
+      // if (billData.status === "Success") {
+      //   const cardDocRef = firestore.collection(
+      //     `card_details/${userId}/cards/${firestore_bank_name} - ${lastFourDigitOfCard}`
+      //   );
+      //   await cardDocRef.set(
+      //     {
+      //       BAT: billData.bill, // No need to divide by 100 here if already done above
+      //       // additionalInfo: billData.additionalInfo,
+      //     },
+      //     { merge: true }
+      //   );
+      // }
+
+      const bnxtResponse: any = {};
+      if (billData.failureReason) {
+        const failureDetails = failureReasonMap[billData.failureReason.code];
+        bnxtResponse.status = failureDetails?.status || "Failure";
+        bnxtResponse.message = failureDetails?.message || null;
+        bnxtResponse.failureReason = billData.failureReason;
+      } else {
+        bnxtResponse.status =
+          billData.status === "Success" ? "Success" : "Failure";
+        bnxtResponse.message = null;
+      }
+
+      data.data.data.bnxtResponse = bnxtResponse;
+
+      // Payment Range Calculation
+      if (billData.bill) {
+        if (billData.exactness == "Exact and below") {
+          const paymentRange: any = {};
+
+          const upiMinLimitItem = billData.paymentLimits?.find(
+            (item: any) => item.paymentMode === "UPI"
+          );
+          const internetBankingMinLimitItem = billData.paymentLimits?.find(
+            (item: any) => item.paymentMode === "Internet Banking"
+          );
+          const TotalOutstanding = billData.additionalInfo?.find(
+            (item: any) => item.name === "Total Due Amount"
+          );
+          const TotalOustandingValue = TotalOutstanding
+            ? parseFloat(TotalOutstanding.value)
+            : 0;
+
+          const upiMinLimit = upiMinLimitItem
+            ? parseFloat(upiMinLimitItem.minLimit)
+            : 10;
+          const internetBankingMinLimit = internetBankingMinLimitItem
+            ? parseFloat(internetBankingMinLimitItem.minLimit)
+            : 200000;
+
+          paymentRange.UPI = {
+            minLimit: Math.max(10, upiMinLimit),
+            maxLimit: Math.min(
+              200000,
+              Math.max(billData.bill.amount, TotalOustandingValue)
+            ),
+          };
+
+          if (200000 > Math.max(billData.bill.amount, TotalOustandingValue)) {
+            paymentRange["Internet Banking"] = null;
+          } else {
+            paymentRange["Internet Banking"] = {
+              minLimit: Math.max(200000, internetBankingMinLimit),
+              maxLimit: Math.min(1000000, billData.bill.amount),
+            };
+          }
+
+          paymentRange["minPayableAmount"] = Math.max(10, upiMinLimit);
+          if ((billData.exactness = "Exact and below")) {
+            paymentRange["maxPayableAmount"] = Math.max(
+              billData.bill.amount,
+              TotalOustandingValue
+            );
+          } else {
+            paymentRange["maxPayableAmount"] = 1000000;
+          }
+
+          data.data.data.bnxtResponse.paymentRange = paymentRange;
+        } else {
+          const paymentRange: any = {};
+
+          const upiMinLimitItem = billData.paymentLimits?.find(
+            (item: any) => item.paymentMode === "UPI"
+          );
+          const internetBankingMinLimitItem = billData.paymentLimits?.find(
+            (item: any) => item.paymentMode === "Internet Banking"
+          );
+
+          const upiMinLimit = upiMinLimitItem
+            ? parseFloat(upiMinLimitItem.minLimit)
+            : 10;
+          const internetBankingMinLimit = internetBankingMinLimitItem
+            ? parseFloat(internetBankingMinLimitItem.minLimit)
+            : 200000;
+
+          paymentRange.UPI = {
+            minLimit: Math.max(10, upiMinLimit),
+            maxLimit: 200000,
+          };
+
+          paymentRange["Internet Banking"] = {
+            minLimit: Math.max(200000, internetBankingMinLimit),
+            maxLimit: 1000000,
+          };
+
+          paymentRange["minPayableAmount"] = paymentRange.UPI.minLimit;
+          paymentRange["maxPayableAmount"] = 1000000;
+
+          data.data.data.bnxtResponse.paymentRange = paymentRange;
+        }
+      }
+
+      // Ref ID
+      data.data.data.bnxtResponse.traceId = data.data.traceId;
+      // Trace ID
+      data.data.data.bnxtResponse.refId = data.data.data.refId;
+
+      // Bill Details
+      if (billData.bill) {
+        const bnxtBillDetails: any = {};
+
+        if (billData.bill.amount > 0) {
+          bnxtBillDetails["Bill Amount"] = billData.bill.amount;
+        }
+
+        const MinimumAmountDue = billData.additionalInfo?.find(
+          (item: any) => item.name === "Minimum Payable Amount"
+        );
+        if (MinimumAmountDue > 0) {
+          bnxtBillDetails["Minimum Due"] = MinimumAmountDue.value;
+        }
+
+        const TotalOutstanding = billData.additionalInfo?.find(
+          (item: any) => item.name === "Total Due Amount"
+        );
+        if (TotalOutstanding > 0) {
+          bnxtBillDetails["Total Due Amount"] = TotalOutstanding.value;
+        }
+
+        data.data.data.bnxtResponse.bnxtBillDetails = bnxtBillDetails;
+      }
+      data.data.data.bnxtResponse.supportsCustomPayment = true;
+      data.data = bnxtResponse;
+    }
+
+    return NextResponse.json(data, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching bill details:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch bill details" },
+      { status: 500 }
+    );
+  }
+}
