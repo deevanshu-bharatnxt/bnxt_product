@@ -277,10 +277,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       // Bill Details
 
       if (billData.bill) {
-        const bnxtBillDetails: any = {};
+        const bnxtBillDetails = [];
 
         if (billData.bill.amount > 0) {
-          bnxtBillDetails["Bill Amount"] = billData.bill.amount;
+          bnxtBillDetails.push({
+            title: "Bill Amount",
+            amount: billData.bill.amount,
+          });
+          // bnxtBillDetails["Bill Amount"] = billData.bill.amount;
         }
 
         if (billData.additionalInfo && Array.isArray(billData.additionalInfo)) {
@@ -292,7 +296,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 item.value !== "")
             ) {
               // Check for numeric > 0 OR non-zero, non-empty strings
-              bnxtBillDetails[item.name] = item.value;
+              bnxtBillDetails.push({
+                title: item.name,
+                amount: item.value,
+              });
+              // bnxtBillDetails[item.name] = item.value;
             }
           });
         }
