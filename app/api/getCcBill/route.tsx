@@ -281,7 +281,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         if (billData.bill.amount > 0) {
           bnxtBillDetails.push({
-            title: "Bill Amount",
+            title: "Total Due",
             amount: billData.bill.amount,
           });
           // bnxtBillDetails["Bill Amount"] = billData.bill.amount;
@@ -296,17 +296,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 item.value !== "")
             ) {
               // Check for numeric > 0 OR non-zero, non-empty strings
-              if (item.name === "Minimum Payable Amount") {
+              if (
+                item.name === "Minimum Payable Amount" ||
+                item.name === "Minimum Due"
+              ) {
                 bnxtBillDetails.push({
                   title: "Minimum Due",
                   amount: item.value,
                 });
-              } else {
-                bnxtBillDetails.push({
-                  title: item.name,
-                  amount: item.value,
-                });
-              }
+              } 
+              // else {
+              //   bnxtBillDetails.push({
+              //     title: item.name,
+              //     amount: item.value,
+              //   });
+              // }
               // bnxtBillDetails[item.name] = item.value;
             }
           });
