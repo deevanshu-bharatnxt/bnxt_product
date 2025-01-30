@@ -5,7 +5,27 @@ import axios from "axios";
 // import { initializeApp } from "firebase/app";
 // import { getFirestore } from "firebase/firestore";
 
-const bankNameMap = {
+interface BankNameMap {
+  [key: string]: string; // This allows any string as a key
+  // OR, for more specific keys (recommended if possible):
+  // "AU SMALL FINANCE BANK": string;
+  // "AXIS BANK": string;
+  // ... all your bank names
+}
+
+interface BillerResponse {
+  [key: string]: {
+    // Or a more specific key type if you know them all
+    status: string;
+    message: string;
+  };
+  // OR, if you know all the possible keys:
+  // BFR001: { status: string; message: string; };
+  // BFR002: { status: string; message: string; };
+  // ... all your BFR codes
+}
+
+const bankNameMap: BankNameMap = {
   "AU SMALL FINANCE BANK": "AU Bank Credit Card",
   "AXIS BANK": "Axis Bank Credit Card",
   "BANK OF BARODA": "BoB Credit Card",
@@ -29,7 +49,7 @@ const bankNameMap = {
   "YES BANK": "Yes Bank Credit Card",
 };
 
-const failureReasonMap = {
+const failureReasonMap: BillerResponse = {
   BFR001: {
     status: "Failure",
     message: "Incorrect / invalid details, reach out to support",
@@ -86,7 +106,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const { firestore_bank_name, lastFourDigitOfCard, mobileNumber, userId } =
       body;
 
-    const bbps_bank_name = bankNameMap[firestore_bank_name];
+    // const bbps_bank_name = bankNameMap[firestore_bank_name];
+    const bbps_bank_name =
+      bankNameMap[firestore_bank_name as keyof BankNameMap];
 
     if (!bbps_bank_name) {
       return NextResponse.json(
