@@ -296,10 +296,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
                 item.value !== "")
             ) {
               // Check for numeric > 0 OR non-zero, non-empty strings
-              bnxtBillDetails.push({
-                title: item.name,
-                amount: item.value,
-              });
+              if (item.name === "Minimum Payable Amount") {
+                bnxtBillDetails.push({
+                  title: "Minimum Due",
+                  amount: item.value,
+                });
+              } else {
+                bnxtBillDetails.push({
+                  title: item.name,
+                  amount: item.value,
+                });
+              }
               // bnxtBillDetails[item.name] = item.value;
             }
           });
