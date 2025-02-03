@@ -298,7 +298,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
               // Check for numeric > 0 OR non-zero, non-empty strings
               if (
                 item.name === "Minimum Payable Amount" ||
-                item.name === "Minimum Due"
+                item.name === "Minimum Due" ||
+                item.name === "MinimumDueAmount"
               ) {
                 bnxtBillDetails.push({
                   title: "Minimum Due",
