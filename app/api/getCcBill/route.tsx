@@ -323,8 +323,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       data.data.data.bnxtResponse.supportsCustomPayment = true;
       data.data.data.bnxtResponse.loginMobile = loginMobile;
       bnxtResponse.supportPendingStatus = {
-        "UPI": false,
-        "Internet Banking": false,
+        "upi": false,
+        "internetBanking": false,
       };
       data.data = bnxtResponse;
     }
