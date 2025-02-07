@@ -327,23 +327,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         "internetBanking": false,
       };
       data.data = bnxtResponse;
-      data.data = {
-        "status": "Bill Paid",
-        "message": "As per bank's policy, payments can only be made when there's a bill due. We'll notify you as soon as your next bill is generated",
-        "failureReason": {
-          "code": "BFR004",
-          "message": "Payment received for the billing period - no bill due",
-          "type": "BBPS"
-        },
-        "traceId": "CUIPM5E5ON74OL79VF4G",
-        "refId": "CUIPM54AVN45M93GIOI0M697FUL50381103",
-        "supportsCustomPayment": true,
-        "loginMobile": false,
-        "supportPendingStatus": {
-          "upi": false,
-          "internetBanking": false
-        }
-      };
+      // data.data = {
+      //   "status": "Bill Paid",
+      //   "message": "As per bank's policy, payments can only be made when there's a bill due. We'll notify you as soon as your next bill is generated",
+      //   "failureReason": {
+      //     "code": "BFR004",
+      //     "message": "Payment received for the billing period - no bill due",
+      //     "type": "BBPS"
+      //   },
+      //   "traceId": "CUIPM5E5ON74OL79VF4G",
+      //   "refId": "CUIPM54AVN45M93GIOI0M697FUL50381103",
+      //   "supportsCustomPayment": true,
+      //   "loginMobile": false,
+      //   "supportPendingStatus": {
+      //     "upi": false,
+      //     "internetBanking": false
+      //   }
+      // };
     }
 
     return NextResponse.json(data, { status: 200 });
