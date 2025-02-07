@@ -52,7 +52,7 @@ const bankNameMap: BankNameMap = {
 const failureReasonMap: BillerResponse = {
   BFR001: {
     status: "Failure",
-    message: "Incorrect / invalid details, reach out to support",
+    message: "Payment unavailable as this card is not on BBPS. We'll notify you when it's available",
   },
   BFR002: {
     status: "Mobile Incorrect",
