@@ -33,6 +33,7 @@ export default function GetBill() {
   const [response, setResponse] = useState<any | null>(null); // Type 'response' as needed
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [billMarkedAsPaid, setBillMarkedAsPaid] = useState(false);
   const [loginMobile, setLoginMobile] = useState(false);
 
   const handleBankNameChange = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -41,6 +42,9 @@ export default function GetBill() {
   };
   const handleLoginMobileChange = (e: ChangeEvent<HTMLInputElement>) => {
     setLoginMobile(e.target.checked);
+  };
+  const handleBillMarkedAsPaidChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setBillMarkedAsPaid(e.target.checked);
   };
 
   const handleSubmit = async (e: ChangeEvent<HTMLFormElement>) => {
@@ -151,6 +155,14 @@ export default function GetBill() {
           id="loginMobile"
           checked={loginMobile}
           onChange={handleLoginMobileChange}
+        />
+        <br />
+        <label htmlFor="billMarkedAsPaid">Bill Marked As Paid:</label>
+        <input
+          type="checkbox"
+          id="billMarkedAsPaid"
+          checked={billMarkedAsPaid}
+          onChange={handleBillMarkedAsPaidChange}
         />
         <br />
       
