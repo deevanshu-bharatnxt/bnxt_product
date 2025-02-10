@@ -109,6 +109,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       mobileNumber,
       userId,
       loginMobile,
+      billMarkedAsPaid,
     } = body;
 
     // const bbps_bank_name = bankNameMap[firestore_bank_name];
@@ -207,7 +208,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             ? parseFloat(internetBankingMinLimitItem.minLimit)
             : 200000;
 
-          paymentRange.UPI = {
+          paymentRange.upi = {
             minLimit: Math.max(10, upiMinLimit),
             maxLimit: Math.min(
               200000,
@@ -216,9 +217,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           };
 
           if (200000 > Math.max(billData.bill.amount, TotalOustandingValue)) {
-            paymentRange["Internet Banking"] = null;
+            paymentRange.internetBanking = null;
           } else {
-            paymentRange["Internet Banking"] = {
+            paymentRange.internetBanking = {
               minLimit: Math.max(200000, internetBankingMinLimit),
               maxLimit: Math.min(1000000, billData.bill.amount),
             };
@@ -252,17 +253,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             ? parseFloat(internetBankingMinLimitItem.minLimit)
             : 200000;
 
-          paymentRange.UPI = {
+          paymentRange.upi = {
             minLimit: Math.max(10, upiMinLimit),
             maxLimit: 200000,
           };
 
-          paymentRange["Internet Banking"] = {
+          paymentRange["internetBanking"] = {
             minLimit: Math.max(200000, internetBankingMinLimit),
             maxLimit: 1000000,
           };
 
-          paymentRange["minPayableAmount"] = paymentRange.UPI.minLimit;
+          paymentRange["minPayableAmount"] = paymentRange.upi.minLimit;
           paymentRange["maxPayableAmount"] = 1000000;
 
           data.data.data.bnxtResponse.paymentRange = paymentRange;
