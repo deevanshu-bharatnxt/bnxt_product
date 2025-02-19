@@ -36,11 +36,11 @@ export default function GetCCBill() {
     "Yes Bank Credit Card"
   ];
 
-  const handleChange = (e) => {
+  const handleChange = (e: { target: { name: any; value: any; }; }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -59,7 +59,7 @@ export default function GetCCBill() {
       if (!res.ok) throw new Error(data.message || "Something went wrong");
       setResponse(data);
     } catch (err) {
-      setError(err.message);
+      
     } finally {
       setLoading(false);
     }

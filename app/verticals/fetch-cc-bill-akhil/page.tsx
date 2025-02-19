@@ -55,7 +55,7 @@ export default function GetBill() {
     setResponse(null);
 
     try {
-      const res = await fetch("/api/getCcBill", {
+      const res = await fetch("https://staging.bharatnxt.in/bnxt_util/setu/v2/getCCBillOfUser", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

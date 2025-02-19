@@ -197,9 +197,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           const TotalOutstanding = billData.additionalInfo?.find(
             (item: any) => item.name === "Total Due Amount"
           );
+
+          const CurrentOutstanding = billData.additionalInfo?.find(
+            (item: any) => item.name === "Current Outstanding"
+          ); 
           const TotalOustandingValue = TotalOutstanding
             ? parseFloat(TotalOutstanding.value)
             : 0;
+
+          const CurrentOutstandingValue = CurrentOutstanding
+          ? parseFloat(CurrentOutstanding.value)
+          : 0;
 
           const upiMinLimit = upiMinLimitItem
             ? parseFloat(upiMinLimitItem.minLimit)
@@ -212,16 +220,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             minLimit: Math.max(10, upiMinLimit),
             maxLimit: Math.min(
               200000,
-              Math.max(billData.bill.amount, TotalOustandingValue)
+              Math.max(billData.bill.amount, TotalOustandingValue, CurrentOutstandingValue)
             ),
           };
 
-          if (200000 > Math.max(billData.bill.amount, TotalOustandingValue)) {
+          if (200000 > Math.max(billData.bill.amount, TotalOustandingValue, CurrentOutstandingValue)) {
             paymentRange.internetBanking = null;
           } else {
             paymentRange.internetBanking = {
               minLimit: Math.max(200000, internetBankingMinLimit),
-              maxLimit: Math.min(1000000, billData.bill.amount),
+              maxLimit: Math.min(1000000, Math.max(billData.bill.amount, TotalOustandingValue, CurrentOutstandingValue)),
             };
           }
 
@@ -229,7 +237,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           if ((billData.exactness = "Exact and below")) {
             paymentRange["maxPayableAmount"] = Math.max(
               billData.bill.amount,
-              TotalOustandingValue
+              TotalOustandingValue,
+              CurrentOutstandingValue
             );
           } else {
             paymentRange["maxPayableAmount"] = 1000000;
