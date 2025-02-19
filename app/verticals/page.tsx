@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation"; // For Next.js App Router (app dire
 export default function Verticals() {
   const router = useRouter();
 
-  const handleClick = (path) => {
+  const handleClick = (path: string) => {
     router.push(path);
   };
 
