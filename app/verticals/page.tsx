@@ -1,16 +1,15 @@
-"use client"
+"use client";
 
 // pages/index.js (or your home page file)
 import { title, subtitle } from "@/components/primitives";
 import { Button } from "@nextui-org/button";
 import { useRouter } from "next/navigation"; // For Next.js App Router (app directory)
-// import { useRouter } from 'next/router'; // For Next.js Pages Router (pages directory)
 
-export default function Home() {
+export default function Verticals() {
   const router = useRouter();
 
-  const handleClick = (ad: string) => {
-    router.push(ad);
+  const handleClick = (path) => {
+    router.push(path);
   };
 
   return (
@@ -26,8 +25,9 @@ export default function Home() {
           Tools to increase productivity
         </div>
 
-        <Button onPress={() => handleClick('verticals/fetch-cc-bill')}>Fetch CC Bill</Button>
-        <Button onPress={() => handleClick('verticals')}>Verticals</Button>
+        <Button onPress={() => handleClick("fetch-cc-bill")}>Fetch CC Bill</Button>
+        <Button onPress={() => handleClick("fetch-cc-bill-akhil")}>Fetch CC Bill Akhil</Button>
+        <Button onPress={() => handleClick("fetch-cc-bill-setu")}>Fetch CC Bill Setu</Button>
       </div>
     </section>
   );
