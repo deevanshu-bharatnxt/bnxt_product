@@ -25,9 +25,9 @@ export default function Verticals() {
           Tools to increase productivity
         </div>
 
-        <Button onPress={() => handleClick("fetch-cc-bill")}>Fetch CC Bill</Button>
-        <Button onPress={() => handleClick("fetch-cc-bill-akhil")}>Fetch CC Bill Akhil</Button>
-        <Button onPress={() => handleClick("fetch-cc-bill-setu")}>Fetch CC Bill Setu</Button>
+        <Button onPress={() => handleClick("verticals/fetch-cc-bill")}>Fetch CC Bill</Button>
+        <Button onPress={() => handleClick("verticals/fetch-cc-bill-akhil")}>Fetch CC Bill Akhil</Button>
+        <Button onPress={() => handleClick("verticals/fetch-cc-bill-setu")}>Fetch CC Bill Setu</Button>
       </div>
     </section>
   );

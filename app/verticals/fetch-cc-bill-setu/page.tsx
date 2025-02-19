@@ -1,182 +1,104 @@
-"use client";
-import { ChangeEvent, useState } from "react";
+'use client';
+import { useState } from "react";
 
-const bankNames = [
-  "AU SMALL FINANCE BANK",
-  "AXIS BANK",
-  "BANK OF BARODA",
-  "CANARA BANK",
-  "DBS BANK",
-  "THE FEDERAL BANK",
-  "HDFC BANK",
-  "HSBC BANK",
-  "ICICI BANK",
-  "IDBI BANK",
-  "IDFC FIRST BANK",
-  "INDIAN BANK",
-  "INDUSIND BANK",
-  "KOTAK MAHINDRA BANK",
-  "PUNJAB NATIONAL BANK",
-  "RBL BANK",
-  "SARASWAT BANK",
-  "STATE BANK OF INDIA",
-  "SOUTH INDIAN BANK",
-  "UNION BANK OF INDIA",
-  "YES BANK",
-];
-
-export default function GetBill() {
-  const [selectedBankName, setSelectedBankName] = useState("");
-  const [lastFourDigits, setLastFourDigits] = useState("");
-  const [mobileNumber, setMobileNumber] = useState("");
-  const [userId, setUserId] = useState("");
-  const [response, setResponse] = useState<any | null>(null); // Type 'response' as needed
-  const [error, setError] = useState<string | null>(null);
+export default function GetCCBill() {
+  const [formData, setFormData] = useState({
+    bankName: "ICICI Credit card",
+    lastFourDigitOfCard: "",
+    mobileNumber: "",
+    userId: ""
+  });
+  const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [billMarkedAsPaid, setBillMarkedAsPaid] = useState(false);
-  const [loginMobile, setLoginMobile] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleBankNameChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    // Correct event type
-    setSelectedBankName(e.target.value);
-  };
-  const handleLoginMobileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setLoginMobile(e.target.checked);
-  };
-  const handleBillMarkedAsPaidChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setBillMarkedAsPaid(e.target.checked);
+  const bankOptions = [
+    "AU Bank Credit Card",
+    "Axis Bank Credit Card",
+    "BoB Credit Card",
+    "Canara Credit Card",
+    "DBS Bank Credit Card",
+    "Federal Bank Credit Card",
+    "HDFC Credit Card",
+    "HSBC Credit Card",
+    "ICICI Credit card",
+    "IDBI Bank Credit Card",
+    "IDFC FIRST Bank Credit Card",
+    "Indian bank credit card",
+    "IndusInd Credit Card",
+    "Kotak Mahindra Bank Credit Card",
+    "Punjab National Bank Credit Card",
+    "RBL Bank Credit Card",
+    "Saraswat Co-Operative Bank Ltd",
+    "STATE BANK OF INDIA",
+    "One Card - South Indian",
+    "Union Bank of India Credit Card",
+    "Yes Bank Credit Card"
+  ];
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: ChangeEvent<HTMLFormElement>) => {
-    // Correct event type
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setResponse(null);
 
     try {
-      const res = await fetch("/api/getCcBill", {
+      const res = await fetch("https://staging.bharatnxt.in/bnxt_util/setu/v1/getCCBillOfUser", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          firestoreBankName: selectedBankName,
-          lastFourDigitOfCard: lastFourDigits,
-          mobileNumber,
-          userId,
-          loginMobile,
-        }),
+        body: JSON.stringify(formData)
       });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to fetch bill details");
-      }
-
+      
       const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Something went wrong");
       setResponse(data);
-    } catch (err: any) {
-      // Type 'err' as 'any' or a custom error type if needed
-      if (err instanceof Error) {
-        setError(err.message);
-        console.error("API Error:", err);
-      } else if (typeof err === "string") {
-        // Check if err is a string
-        setError(err);
-        console.error("API Error (string):", err);
-      } else {
-        setError("An unknown error occurred.");
-        console.error("An unknown error occurred:", err);
-      }
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h1>Get Bill Details</h1>
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="bankName">Bank Name:</label>
-        <select
-          id="bankName"
-          value={selectedBankName}
-          onChange={handleBankNameChange}
-          required
-        >
-          <option value="">Select Bank</option>
-          {bankNames.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
-        <br />
-
-        <label htmlFor="lastFourDigits">Last 4 Digits:</label>
-        <input
-          type="text"
-          id="lastFourDigits"
-          value={lastFourDigits}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setLastFourDigits(e.target.value)
-          }
-          required
-        />
-        <br />
-
-        <label htmlFor="mobileNumber">Mobile Number:</label>
-        <input
-          type="tel"
-          id="mobileNumber"
-          value={mobileNumber}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setMobileNumber(e.target.value)
-          }
-          required
-        />
-        <br />
-
-        <label htmlFor="userId">User ID:</label>
-        <input
-          type="text"
-          id="userId"
-          value={userId}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setUserId(e.target.value)
-          }
-          required
-        />
-        <br />
-        <label htmlFor="loginMobile">Login with Mobile:</label>
-        <input
-          type="checkbox"
-          id="loginMobile"
-          checked={loginMobile}
-          onChange={handleLoginMobileChange}
-        />
-        <br />
-        <label htmlFor="billMarkedAsPaid">Bill Marked As Paid:</label>
-        <input
-          type="checkbox"
-          id="billMarkedAsPaid"
-          checked={billMarkedAsPaid}
-          onChange={handleBillMarkedAsPaidChange}
-        />
-        <br />
-      
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Loading..." : "Get Bill"}
+    <div className="p-6 max-w-md mx-auto bg-white shadow-md rounded-md">
+      <h1 className="text-xl font-bold mb-4">Get Credit Card Bill</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium">Bank Name</label>
+          <select name="bankName" value={formData.bankName} onChange={handleChange} className="w-full p-2 border rounded">
+            {bankOptions.map((bank) => (
+              <option key={bank} value={bank}>{bank}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Last 4 Digits of Card</label>
+          <input type="text" name="lastFourDigitOfCard" value={formData.lastFourDigitOfCard} onChange={handleChange} className="w-full p-2 border rounded" required />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Mobile Number</label>
+          <input type="text" name="mobileNumber" value={formData.mobileNumber} onChange={handleChange} className="w-full p-2 border rounded" required />
+        </div>
+        <div>
+          <label className="block text-sm font-medium">User ID</label>
+          <input type="text" name="userId" value={formData.userId} onChange={handleChange} className="w-full p-2 border rounded" required />
+        </div>
+        <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded" disabled={loading}>
+          {loading ? "Fetching..." : "Submit"}
         </button>
       </form>
 
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
+      {error && <p className="text-red-500 mt-4">Error: {error}</p>}
       {response && (
-        <div>
-          <h2>Response:</h2>
-          <pre>{JSON.stringify(response, null, 2)}</pre>
+        <div className="mt-4 p-3 bg-gray-100 rounded">
+          <h2 className="text-lg font-semibold">Response:</h2>
+          <pre className="text-sm break-words">{JSON.stringify(response, null, 2)}</pre>
         </div>
       )}
     </div>
