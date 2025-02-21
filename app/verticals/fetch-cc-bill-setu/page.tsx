@@ -30,7 +30,7 @@ export default function GetCCBill() {
     "Punjab National Bank Credit Card",
     "RBL Bank Credit Card",
     "Saraswat Co-Operative Bank Ltd",
-    "STATE BANK OF INDIA",
+    "SBI Card",
     "One Card - South Indian",
     "Union Bank of India Credit Card",
     "Yes Bank Credit Card"
