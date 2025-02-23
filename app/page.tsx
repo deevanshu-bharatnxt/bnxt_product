@@ -2,7 +2,7 @@
 
 // pages/index.js (or your home page file)
 import { title, subtitle } from "@/components/primitives";
-import { Button } from "@nextui-org/button";
+import { Button } from "@heroui/button";
 import { useRouter } from "next/navigation"; // For Next.js App Router (app directory)
 // import { useRouter } from 'next/router'; // For Next.js Pages Router (pages directory)
 
