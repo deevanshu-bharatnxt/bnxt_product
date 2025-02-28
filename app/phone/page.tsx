@@ -23,6 +23,7 @@ const firebaseConfig = {
     measurementId: "G-SZR0X6159B"
 };
 
+
 // Initialize Firebase (client-side only)
 if (typeof window !== "undefined" && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
